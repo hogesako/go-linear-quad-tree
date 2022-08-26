@@ -1,6 +1,7 @@
 package linearquadtree
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -23,7 +24,7 @@ type TreeObject struct {
 
 const TreeMaxLevel = 10
 
-type CLiner4TreeManager struct {
+type Liner4TreeManager struct {
 	cells      []*Cell
 	pow        [TreeMaxLevel + 1]int32
 	width      float64 // 領域のX軸幅
@@ -104,9 +105,7 @@ func (obj *TreeObject) Remove() {
 	obj.Cell = nil
 }
 
-func (m *CLiner4TreeManager) Init(left, top, right, bottom float64) {
-
-	level := int32(9)
+func (m *Liner4TreeManager) Init(level int32, left, top, right, bottom float64) {
 	// 各レベルでの空間数を算出
 	m.pow[0] = 1
 	for i := 1; i < TreeMaxLevel+1; i++ {
@@ -126,7 +125,7 @@ func (m *CLiner4TreeManager) Init(left, top, right, bottom float64) {
 	m.level = level
 }
 
-func (m *CLiner4TreeManager) Register(left, top, right, bottom float64, treeObj *TreeObject) {
+func (m *Liner4TreeManager) Register(left, top, right, bottom float64, treeObj *TreeObject) error {
 	// オブジェクトの境界範囲から登録モートン番号を算出
 	mortonNo := m.getMortonNumber(left, top, right, bottom)
 	if mortonNo < m.cellNum {
@@ -135,10 +134,13 @@ func (m *CLiner4TreeManager) Register(left, top, right, bottom float64, treeObj 
 			m.createNewCell(mortonNo)
 		}
 		m.cells[mortonNo].Push(treeObj)
+		return nil
+	} else {
+		return fmt.Errorf("object over range cellnum")
 	}
 }
 
-func (m *CLiner4TreeManager) GetCollisionList() []CollisionPair {
+func (m *Liner4TreeManager) GetCollisionList() []CollisionPair {
 	pairs := make([]CollisionPair, 0, 1000000)
 	if m.cells[0] == nil {
 		return pairs
@@ -151,7 +153,7 @@ func (m *CLiner4TreeManager) GetCollisionList() []CollisionPair {
 	return pairs
 }
 
-func (m *CLiner4TreeManager) _getCollisionList(elem int32, pairs *[]CollisionPair, stack *TreeObjectStack) {
+func (m *Liner4TreeManager) _getCollisionList(elem int32, pairs *[]CollisionPair, stack *TreeObjectStack) {
 	obj1 := m.cells[elem].Latest
 	for obj1 != nil {
 		obj2 := obj1.Next
@@ -197,7 +199,7 @@ func (m *CLiner4TreeManager) _getCollisionList(elem int32, pairs *[]CollisionPai
 	}
 }
 
-func (m *CLiner4TreeManager) createNewCell(cellNum int32) {
+func (m *Liner4TreeManager) createNewCell(cellNum int32) {
 	m.Mu.Lock()
 	defer m.Mu.Unlock()
 	for m.cells[cellNum] == nil {
@@ -210,11 +212,11 @@ func (m *CLiner4TreeManager) createNewCell(cellNum int32) {
 }
 
 // 座標→線形4分木要素番号変換関数
-func (m *CLiner4TreeManager) getPointElem(x, y float64) int32 {
+func (m *Liner4TreeManager) getPointElem(x, y float64) int32 {
 	return Get2DMortonNumber((int32)((x-m.left)/m.unitWidth), (int32)((y-m.top)/m.unitHeight))
 }
 
-func (m *CLiner4TreeManager) getMortonNumber(left, top, right, bottom float64) int32 {
+func (m *Liner4TreeManager) getMortonNumber(left, top, right, bottom float64) int32 {
 	// 最小レベルにおける各軸位置を算出
 	leftTop := m.getPointElem(left, top)
 	rightBottom := m.getPointElem(right, bottom)
@@ -230,10 +232,7 @@ func (m *CLiner4TreeManager) getMortonNumber(left, top, right, bottom float64) i
 		}
 	}
 	spaceNum := rightBottom >> (int32(hiLevel) * 2)
-	addNum := m.pow[m.level-int32(hiLevel)-1] / 3
+	addNum := (m.pow[m.level-int32(hiLevel)] - 1) / 3
 	spaceNum += addNum
-	if spaceNum > m.cellNum {
-		panic("over cell no")
-	}
 	return spaceNum
 }
