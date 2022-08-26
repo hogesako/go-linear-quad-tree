@@ -126,7 +126,10 @@ func (m *CLiner4TreeManager) Init(left, top, right, bottom float64) {
 	m.level = level
 }
 
-func (m *CLiner4TreeManager) Register(left, top, right, bottom float64, obj *TreeObject) {
+func (m *CLiner4TreeManager) Register(left, top, right, bottom float64, obj interface{}) {
+	treeObj := TreeObject{}
+	treeObj.Object = obj
+
 	// オブジェクトの境界範囲から登録モートン番号を算出
 	mortonNo := m.getMortonNumber(left, top, right, bottom)
 	if mortonNo < m.cellNum {
@@ -134,7 +137,7 @@ func (m *CLiner4TreeManager) Register(left, top, right, bottom float64, obj *Tre
 		if m.cells[mortonNo] == nil {
 			m.createNewCell(mortonNo)
 		}
-		m.cells[mortonNo].Push(obj)
+		m.cells[mortonNo].Push(&treeObj)
 	}
 }
 
@@ -204,7 +207,7 @@ func (m *CLiner4TreeManager) createNewCell(cellNum int32) {
 	for m.cells[cellNum] == nil {
 		m.cells[cellNum] = &Cell{}
 		cellNum = (cellNum - 1) >> 2
-		if cellNum >= m.cellNum { // cellNum < 0では？
+		if cellNum < 0 {
 			break
 		}
 	}
