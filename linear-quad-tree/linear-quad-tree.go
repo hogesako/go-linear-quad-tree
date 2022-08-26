@@ -149,26 +149,25 @@ func (m *CLiner4TreeManager) GetCollisionList() []CollisionPair {
 
 	var stack *TreeObjectStack = NewStack(1000)
 
-	m._getCollisionList(0, pairs, stack)
+	m._getCollisionList(0, &pairs, stack)
 
 	return pairs
 }
 
-func (m *CLiner4TreeManager) _getCollisionList(elem int32, pairs []CollisionPair, stack *TreeObjectStack) {
+func (m *CLiner4TreeManager) _getCollisionList(elem int32, pairs *[]CollisionPair, stack *TreeObjectStack) {
 	obj1 := m.cells[elem].Latest
-
-	println(elem, m.cells[elem].Latest)
 	for obj1 != nil {
 		obj2 := obj1.Next
 		// 空間内の衝突可能性リスト
 		for obj2 != nil {
-			pairs = append(pairs, CollisionPair{obj1, obj2})
+			*pairs = append(*pairs, CollisionPair{obj1, obj2})
 			obj2 = obj2.Next
 		}
+		println(pairs, len(*pairs))
 
 		// スタックとの衝突可能性リスト
 		for _, stackObj := range stack.data {
-			pairs = append(pairs, CollisionPair{obj1, stackObj})
+			*pairs = append(*pairs, CollisionPair{obj1, stackObj})
 		}
 
 		obj1 = obj1.Next
