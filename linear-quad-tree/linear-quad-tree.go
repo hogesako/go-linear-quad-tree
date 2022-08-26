@@ -160,7 +160,6 @@ func (m *CLiner4TreeManager) _getCollisionList(elem int32, pairs *[]CollisionPai
 			*pairs = append(*pairs, CollisionPair{obj1, obj2})
 			obj2 = obj2.Next
 		}
-		println(pairs, len(*pairs))
 
 		// スタックとの衝突可能性リスト
 		for _, stackObj := range stack.data {
