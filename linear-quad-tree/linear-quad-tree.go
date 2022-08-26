@@ -139,12 +139,12 @@ func (m *CLiner4TreeManager) Register(left, top, right, bottom float64, treeObj 
 }
 
 func (m *CLiner4TreeManager) GetCollisionList() []CollisionPair {
-	pairs := make([]CollisionPair, 0)
+	pairs := make([]CollisionPair, 0, 1000000)
 	if m.cells[0] == nil {
 		return pairs
 	}
 
-	var stack *TreeObjectStack = NewStack(1000)
+	var stack *TreeObjectStack = NewStack(1000000)
 
 	m._getCollisionList(0, &pairs, stack)
 
