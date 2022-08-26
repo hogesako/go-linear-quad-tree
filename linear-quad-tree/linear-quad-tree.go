@@ -210,8 +210,8 @@ func (m *CLiner4TreeManager) createNewCell(cellNum int32) {
 }
 
 // 座標→線形4分木要素番号変換関数
-func (m *CLiner4TreeManager) getPointElem(pos_x, pos_y float64) int32 {
-	return Get2DMortonNumber((int32)((pos_x-m.left)/m.unitWidth), (int32)((pos_y-m.top)/m.unitHeight))
+func (m *CLiner4TreeManager) getPointElem(x, y float64) int32 {
+	return Get2DMortonNumber((int32)((x-m.left)/m.unitWidth), (int32)((y-m.top)/m.unitHeight))
 }
 
 func (m *CLiner4TreeManager) getMortonNumber(left, top, right, bottom float64) int32 {
