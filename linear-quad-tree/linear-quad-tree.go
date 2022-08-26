@@ -11,8 +11,9 @@ type CollisionPair struct {
 }
 
 type Cell struct {
-	Latest *TreeObject
-	Mu     sync.Mutex
+	Latest  *TreeObject
+	CellNum int32
+	Mu      sync.Mutex
 }
 
 type TreeObject struct {
@@ -140,7 +141,46 @@ func (m *Liner4TreeManager) Register(left, top, right, bottom float64, treeObj *
 	}
 }
 
-func (m *Liner4TreeManager) GetCollisionList() []CollisionPair {
+// GetCollisionList 引数objectとの衝突可能性のあるペアを返す
+func (m *Liner4TreeManager) GetCollisionList(object *TreeObject) []CollisionPair {
+	pairs := make([]CollisionPair, 0, 1000000)
+	var stack *TreeObjectStack = NewStack(1000000)
+
+	obj1 := object.Cell.Latest
+	for obj1 != nil {
+		// 自空間内の衝突可能性リスト
+		if obj1 != object {
+			pairs = append(pairs, CollisionPair{object, obj1})
+		}
+		obj1 = obj1.Next
+	}
+
+	stack.Push(object)
+	elem := object.Cell.CellNum
+	// 子空間との衝突判定
+	var nextElem int32
+	for i := 0; i < 4; i++ {
+		nextElem = elem*4 + 1 + int32(i)
+		if nextElem < m.cellNum && m.cells[nextElem] != nil {
+			m._getCollisionList(nextElem, &pairs, stack)
+		}
+	}
+
+	// 親空間との判定
+	nextElem = (elem - 1) >> 2
+	for nextElem >= 0 && m.cells[nextElem] != nil {
+		obj1 := m.cells[nextElem].Latest
+		for obj1 != nil {
+			pairs = append(pairs, CollisionPair{object, obj1})
+			obj1 = obj1.Next
+		}
+		nextElem = (nextElem - 1) >> 2
+	}
+	return pairs
+}
+
+// GetCollisionList 全ての衝突可能性のあるペアを返す
+func (m *Liner4TreeManager) GetAllCollisionList() []CollisionPair {
 	pairs := make([]CollisionPair, 0, 1000000)
 	if m.cells[0] == nil {
 		return pairs
@@ -165,7 +205,7 @@ func (m *Liner4TreeManager) _getCollisionList(elem int32, pairs *[]CollisionPair
 
 		// スタックとの衝突可能性リスト
 		for _, stackObj := range stack.data {
-			*pairs = append(*pairs, CollisionPair{obj1, stackObj})
+			*pairs = append(*pairs, CollisionPair{stackObj, obj1})
 		}
 
 		obj1 = obj1.Next
@@ -204,6 +244,7 @@ func (m *Liner4TreeManager) createNewCell(cellNum int32) {
 	defer m.Mu.Unlock()
 	for m.cells[cellNum] == nil {
 		m.cells[cellNum] = &Cell{}
+		m.cells[cellNum].CellNum = cellNum
 		cellNum = (cellNum - 1) >> 2
 		if cellNum < 0 {
 			break

@@ -81,3 +81,67 @@ func TestGetMortonNumber(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestGetAllCollisionList(t *testing.T) {
+	manager := Liner4TreeManager{}
+	manager.Init(3, 0, 0, 100, 100)
+
+	obj := TreeObject{}
+	obj.Object = 1
+	manager.Register(0, 0, 99, 99, &obj) // 全てと衝突可能性あるobj
+
+	obj2 := TreeObject{}
+	obj2.Object = 2
+	manager.Register(51, 0, 99, 48, &obj2)
+
+	obj3 := TreeObject{}
+	obj3.Object = 3
+	manager.Register(51, 51, 99, 99, &obj3)
+
+	obj4 := TreeObject{}
+	obj4.Object = 4
+	manager.Register(51, 51, 74, 74, &obj4)
+
+	list := manager.GetAllCollisionList()
+	for _, v := range list {
+		println(v.Obj1.Object.(int), v.Obj2.Object.(int))
+	}
+
+	if len(list) != 4 {
+		t.Error()
+	}
+}
+
+func TestGetCollisionList(t *testing.T) {
+	manager := Liner4TreeManager{}
+	manager.Init(3, 0, 0, 100, 100)
+
+	obj := TreeObject{}
+	obj.Object = 1
+	manager.Register(0, 0, 99, 99, &obj) // 全てと衝突可能性あるobj
+
+	obj2 := TreeObject{}
+	obj2.Object = 2
+	manager.Register(51, 0, 99, 48, &obj2) // 検証対象
+
+	obj3 := TreeObject{}
+	obj3.Object = 3
+	manager.Register(51, 51, 99, 99, &obj3) // obj2と同じレベルだが衝突可能性はない
+
+	obj4 := TreeObject{}
+	obj4.Object = 4
+	manager.Register(51, 0, 60, 15, &obj4) // 子要素
+
+	obj5 := TreeObject{}
+	obj5.Object = 5
+	manager.Register(51, 51, 60, 60, &obj5) // 子要素衝突しない
+
+	list := manager.GetCollisionList(&obj2)
+	for _, v := range list {
+		println(v.Obj1.Object.(int), v.Obj2.Object.(int))
+	}
+
+	if len(list) != 2 {
+		t.Error()
+	}
+}
