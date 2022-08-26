@@ -132,16 +132,20 @@ func TestGetCollisionList(t *testing.T) {
 	obj4.Object = 4
 	manager.Register(51, 0, 60, 15, &obj4) // 子要素
 
+	obj6 := TreeObject{}
+	obj6.Object = 6
+	manager.Register(51, 0, 60, 15, &obj6) // 子要素
+
 	obj5 := TreeObject{}
 	obj5.Object = 5
 	manager.Register(51, 51, 60, 60, &obj5) // 子要素衝突しない
 
 	list := manager.GetCollisionList(&obj2)
 	for _, v := range list {
-		println(v.Obj1.Object.(int), v.Obj2.Object.(int))
+		println(v.Object.(int))
 	}
 
-	if len(list) != 2 {
+	if len(list) != 3 {
 		t.Error()
 	}
 }

@@ -142,27 +142,24 @@ func (m *Liner4TreeManager) Register(left, top, right, bottom float64, treeObj *
 }
 
 // GetCollisionList 引数objectとの衝突可能性のあるペアを返す
-func (m *Liner4TreeManager) GetCollisionList(object *TreeObject) []CollisionPair {
-	pairs := make([]CollisionPair, 0, 1000000)
-	var stack *TreeObjectStack = NewStack(1000000)
-
+func (m *Liner4TreeManager) GetCollisionList(object *TreeObject) []*TreeObject {
+	list := make([]*TreeObject, 0, 1000000)
 	obj1 := object.Cell.Latest
 	for obj1 != nil {
 		// 自空間内の衝突可能性リスト
 		if obj1 != object {
-			pairs = append(pairs, CollisionPair{object, obj1})
+			list = append(list, obj1)
 		}
 		obj1 = obj1.Next
 	}
 
-	stack.Push(object)
 	elem := object.Cell.CellNum
 	// 子空間との衝突判定
 	var nextElem int32
 	for i := 0; i < 4; i++ {
 		nextElem = elem*4 + 1 + int32(i)
 		if nextElem < m.cellNum && m.cells[nextElem] != nil {
-			m._getCollisionList(nextElem, &pairs, stack)
+			m._getCollisionList(nextElem, &list, object)
 		}
 	}
 
@@ -171,12 +168,29 @@ func (m *Liner4TreeManager) GetCollisionList(object *TreeObject) []CollisionPair
 	for nextElem >= 0 && m.cells[nextElem] != nil {
 		obj1 := m.cells[nextElem].Latest
 		for obj1 != nil {
-			pairs = append(pairs, CollisionPair{object, obj1})
+			list = append(list, obj1)
 			obj1 = obj1.Next
 		}
 		nextElem = (nextElem - 1) >> 2
 	}
-	return pairs
+	return list
+}
+
+func (m *Liner4TreeManager) _getCollisionList(elem int32, list *[]*TreeObject, object *TreeObject) {
+	other := m.cells[elem].Latest
+	for other != nil {
+		*list = append(*list, other)
+		other = other.Next
+	}
+
+	// 子空間との衝突判定
+	var nextElem int32
+	for i := 0; i < 4; i++ {
+		nextElem = elem*4 + 1 + int32(i)
+		if nextElem < m.cellNum && m.cells[nextElem] != nil {
+			m._getCollisionList(nextElem, list, object)
+		}
+	}
 }
 
 // GetCollisionList 全ての衝突可能性のあるペアを返す
@@ -188,12 +202,12 @@ func (m *Liner4TreeManager) GetAllCollisionList() []CollisionPair {
 
 	var stack *TreeObjectStack = NewStack(1000000)
 
-	m._getCollisionList(0, &pairs, stack)
+	m._getAllCollisionList(0, &pairs, stack)
 
 	return pairs
 }
 
-func (m *Liner4TreeManager) _getCollisionList(elem int32, pairs *[]CollisionPair, stack *TreeObjectStack) {
+func (m *Liner4TreeManager) _getAllCollisionList(elem int32, pairs *[]CollisionPair, stack *TreeObjectStack) {
 	obj1 := m.cells[elem].Latest
 	for obj1 != nil {
 		obj2 := obj1.Next
@@ -227,7 +241,7 @@ func (m *Liner4TreeManager) _getCollisionList(elem int32, pairs *[]CollisionPair
 				}
 			}
 			childFlag = true
-			m._getCollisionList(nextElem, pairs, stack)
+			m._getAllCollisionList(nextElem, pairs, stack)
 		}
 	}
 
