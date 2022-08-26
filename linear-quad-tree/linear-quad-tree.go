@@ -157,6 +157,7 @@ func (m *CLiner4TreeManager) GetCollisionList() []CollisionPair {
 func (m *CLiner4TreeManager) _getCollisionList(elem int32, pairs []CollisionPair, stack *TreeObjectStack) {
 	obj1 := m.cells[elem].Latest
 
+	println(elem, m.cells[elem].Latest)
 	for obj1 != nil {
 		obj2 := obj1.Next
 		// 空間内の衝突可能性リスト
@@ -187,9 +188,9 @@ func (m *CLiner4TreeManager) _getCollisionList(elem int32, pairs []CollisionPair
 					objNum++
 					obj1 = obj1.Next
 				}
-				childFlag = true
-				m._getCollisionList(nextElem, pairs, stack)
 			}
+			childFlag = true
+			m._getCollisionList(nextElem, pairs, stack)
 		}
 	}
 
